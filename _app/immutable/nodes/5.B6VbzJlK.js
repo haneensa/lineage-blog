@@ -1,4 +1,4 @@
-import{f as n,a as i}from"../chunks/DnzYIlyJ.js";import"../chunks/RaH3AT36.js";var o=n(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome. For example, to track which input tuples contributed to each output row for a query like Q1, you would have to write something like:</p> <pre><code class="language-sql">
+import{f as m,a as h}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as _,s as t,h as e,i as a}from"../chunks/DxiQdkCR.js";import{s}from"../chunks/DvSqlD5E.js";import{b as r}from"../chunks/CdS7YSVJ.js";var f=m(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome. For example, to track which input tuples contributed to each output row for a query like Q1, you would have to write something like:</p> <pre><code class="language-sql">
 WITH Q1_w_lineage AS (
     SELECT row_number() OVER () AS rowid,
            c.name, SUM(o.value),
@@ -61,4 +61,4 @@ lineage_edges = con.execute(f"SELECT *
 FROM read_block(
     (SELECT max(query_id) FROM pragma_latest_qid())
 );").fetchdf()
-</code></pre> <p>This setup allows you to capture full fine-grained lineage without rewriting queries or modifying your workflow.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="part-b">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary" href="/">← Back to main post</a></li></ul></main>`);function r(e){var a=o();i(e,a)}export{r as component};
+</code></pre> <p>This setup allows you to capture full fine-grained lineage without rewriting queries or modifying your workflow.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary">← Back to main post</a></li></ul></main>`);function x(u){var i=f(),l=t(e(i),32),n=e(l),p=e(n);a(n);var o=t(n,2),d=e(o);a(o);var c=t(o,2),g=e(c);a(c),a(l),a(i),_(()=>{s(p,"href",`${r??""}/part-a`),s(d,"href",`${r??""}/part-b`),s(g,"href",r)}),h(u,i)}export{x as component};
