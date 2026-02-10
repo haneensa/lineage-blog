@@ -1,4 +1,4 @@
-import{f as o,a as i}from"../chunks/BDKgoZ4F.js";import"../chunks/CjR3V926.js";var t=o(`<main><h1>Part A: What-ifs? Evaluating Many Provenance Polynomials Fast</h1> <p>Lineage isn’t just about knowing which inputs produced which outputs—it’s also a powerful tool for <em>what-if analysis</em>.  
+import{f as o,a as i}from"../chunks/DnzYIlyJ.js";import"../chunks/RaH3AT36.js";var t=o(`<main><h1>Part A: What-ifs? Evaluating Many Provenance Polynomials Fast</h1> <p>Lineage isn’t just about knowing which inputs produced which outputs—it’s also a powerful tool for <em>what-if analysis</em>.  
 Imagine asking: <strong>“What if we removed all sensitive orders?”</strong> or <strong>“What if we scaled certain orders by 2x?”</strong> With fine-grained lineage, we can evaluate these hypothetical updates quickly, without recomputing the full query from scratch.</p> <h2>From Provenance Polynomials to Hypotheticals</h2> <p>Recall our earlier example with <code>customer</code> and <code>orders</code>:</p> <pre><code>
 Hannah (oid=1): c1*o1 + c1*o2 + c1*o4  
 Alex   (oid=2): c2*o3  
