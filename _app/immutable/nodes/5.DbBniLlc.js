@@ -61,4 +61,4 @@ lineage_edges = con.execute(f"SELECT *
 FROM read_block(
     (SELECT max(query_id) FROM pragma_latest_qid())
 );").fetchdf()
-</code></pre> <p>This setup allows you to capture full fine-grained lineage without rewriting queries or modifying your workflow.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="/part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="/part-b">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary" href="/">← Back to main post</a></li></ul></main>`);function r(e){var a=o();i(e,a)}export{r as component};
+</code></pre> <p>This setup allows you to capture full fine-grained lineage without rewriting queries or modifying your workflow.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="part-b">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary" href="/">← Back to main post</a></li></ul></main>`);function r(e){var a=o();i(e,a)}export{r as component};
