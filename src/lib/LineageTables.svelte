@@ -1,6 +1,12 @@
 <script>
   import ProvPoly from '$lib/ProvPoly.svelte';
   import LineageBlocks from '$lib/LineageBlocks.svelte';
+  
+  let showPolynomials = false; // toggle to show/hide the polynomial column
+  let hoveredCustomer = null;
+  let hoveredOrder = null;
+  let hoveredOutput = null;
+
 
   // Predefined tables
   let customerTable = [
@@ -37,20 +43,27 @@ INSERT INTO customer VALUES
 INSERT INTO orders VALUES
   ${ordersTable.map(o => `(${o.id}, ${o.cid}, DATE '${o.order_date}', ${o.value}, '${o.sensitivity}')`).join(',\n  ')};
 `;
-  const aggQuery = `SELECT row_number() OVER () AS rowid, c.name, SUM(o.value) AS total_spend
+  const aggQuery = `SELECT c.name, SUM(o.value) AS total_spend
 FROM customer c JOIN orders o USING (cid)
 GROUP BY c.name`;
 
-  // Compute aggregated output
+    // Compute aggregated output with polynomial
   const outputsTable = customerTable.map(c => {
-    const orders = ordersTable.filter(o => o.cid === c.cid).map(o => o.id);
-    return { oid: c.cid, name: c.name, region: c.region, orders };
+    const orders = ordersTable.filter(o => o.cid === c.cid);
+    const ordersIds = orders.map(o => o.id);
+
+    // Construct polynomial: c{cid}*o{id} + ...
+    const polynomial = orders.map(o => `${o.value}*c${c.rowid}*o${o.rowid}`).join(' + ');
+
+    // Return row object
+    return {
+      oid: c.cid,
+      name: c.name,
+      region: c.region,
+      orders: ordersIds,
+      polynomial
+    };
   });
-
-  let hoveredCustomer = null;
-  let hoveredOrder = null;
-  let hoveredOutput = null;
-
   // Helpers for bidirectional highlighting
 
   // Customer is highlighted if:
@@ -110,7 +123,11 @@ GROUP BY c.name`;
     <h4>Customers</h4>
     <table class="table table-striped table-bordered table-sm">
       <thead>
-        <tr><th>rowid</th><th>cid</th><th>name</th><th>region</th></tr>
+        <tr>
+          {#if showPolynomials}<th>rowid</th>{/if}
+            <th>cid</th><th>name</th><th>region</th>
+            {#if showPolynomials}<th>Provenance</th>{/if}
+        </tr>
       </thead>
       <tbody>
         {#each customerTable as c}
@@ -119,10 +136,13 @@ GROUP BY c.name`;
             on:mouseleave={() => hoveredCustomer = null}
             class:table-info={isCustomerHighlighted(c)}
           >
-            <td>{c.rowid}</td>
+          {#if showPolynomials}<td>{c.rowid}</td>{/if}
             <td>{c.cid}</td>
             <td>{c.name}</td>
             <td>{c.region}</td>
+            {#if showPolynomials}
+              <td><code>c{c.rowid}</code></td>
+            {/if}
           </tr>
         {/each}
       </tbody>
@@ -134,7 +154,15 @@ GROUP BY c.name`;
     <h4>Orders</h4>
     <table class="table table-striped table-bordered table-sm">
       <thead>
-        <tr><th>rowid</th><th>id</th><th>cid</th><th>order_date</th><th>value</th><th>sensitivity</th></tr>
+        <tr>
+          {#if showPolynomials}<th>rowid</th>{/if}
+          <th>id</th>
+          <th>cid</th>
+          <th>order_date</th>
+          <th>value</th>
+          <th>sensitivity</th>
+          {#if showPolynomials}<th>Provenance</th>{/if}
+        </tr>
       </thead>
       <tbody>
         {#each ordersTable as o}
@@ -143,12 +171,15 @@ GROUP BY c.name`;
             on:mouseleave={() => hoveredOrder = null}
             class:table-warning={isOrderHighlighted(o)}
           >
-            <td>{o.rowid}</td>
+            {#if showPolynomials}<td>{o.rowid}</td>{/if}
             <td>{o.id}</td>
             <td>{o.cid}</td>
             <td>{o.order_date}</td>
             <td>{o.value}</td>
             <td>{o.sensitivity}</td>
+            {#if showPolynomials}
+              <td><code>o{o.rowid}</code></td>
+            {/if}
           </tr>
         {/each}
       </tbody>
@@ -165,7 +196,11 @@ GROUP BY c.name`;
     <h4>Q1's output</h4>
     <table class="table table-striped table-bordered table-sm">
       <thead>
-        <tr><th>rowid</th><th>name</th><th>total_spend</th></tr>
+        <tr>
+      {#if showPolynomials}<th>rowid</th>{/if}
+          <th>name</th><th>total_spend</th>
+      {#if showPolynomials}<th>Provenance</th>{/if}
+        </tr>
       </thead>
       <tbody>
         {#each outputsTable as out}
@@ -175,9 +210,14 @@ GROUP BY c.name`;
             class:table-success={isOutputHighlighted(out)}
             style="cursor:pointer;"
           >
+            {#if showPolynomials}
             <td>{out.oid}</td>
+            {/if}
             <td>{out.name}</td>
             <td>{out.orders.reduce((sum,id)=>sum+ordersTable.find(o=>o.id===id).value,0)}</td>
+            {#if showPolynomials}
+              <td><code>{out.polynomial}</code></td>
+            {/if}
           </tr>
         {/each}
       </tbody>
@@ -186,6 +226,9 @@ GROUP BY c.name`;
 </div>
 
 
+<button class="btn btn-sm btn-outline-primary mb-2" on:click={() => showPolynomials = !showPolynomials}>
+{showPolynomials ? 'Hide Provenance' : 'Show Provenance'}
+</button>
 <p>
 The tables above show how lineage works at the tuple level. 
 For example, the last row in the output is linked to the last rows from orders and customer tables.
@@ -197,6 +240,7 @@ Hovering is just one way to visualize lineage.
 At its core, lineage is a graph connecting inputs to outputs, showing exactly how each input tuple contributes to each result.
 There are many ways to represent this graph physically. 
 </p>
+
 
 
 

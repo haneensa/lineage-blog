@@ -1,13 +1,20 @@
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static';
 
 /** @type {import('@sveltejs/kit').Config} */
 const config = {
-	kit: {
-		// adapter-auto only supports some environments, see https://svelte.dev/docs/kit/adapter-auto for a list.
-		// If your environment is not supported, or you settled on a specific environment, switch out the adapter.
-		// See https://svelte.dev/docs/kit/adapters for more information about adapters.
-		adapter: adapter()
-	}
+  kit: {
+    // Use static adapter for GitHub Pages
+    adapter: adapter({
+      pages: 'build',
+      assets: 'build',
+      fallback: '200.html' // SPA fallback
+    }),
+    // Base path for GitHub Pages
+    paths: {
+      base: '/lineage-blog'
+    }
+  }
 };
 
 export default config;
+

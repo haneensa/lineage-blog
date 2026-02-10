@@ -1,5 +1,6 @@
 <script>
   import LineageTables from '$lib/LineageTables.svelte';
+  import { base } from '$app/paths';
 
   let showFootnote = false;
 </script>
@@ -16,11 +17,6 @@
       margin-bottom: 20px; /* Adjust the value as needed */
   }
 
-  /* Add space above h3 */
-  h3 {
-      margin-bottom: 20px; /* Adjust the value as needed */
-  }
-
   a:hover {
     background: var(--bs-highlight-bg);
   }
@@ -28,6 +24,14 @@
   .lineage-img {
   max-width: 800px;
 }
+.sup-button {
+  background: none;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+}
+
 </style>
 
 
@@ -43,7 +47,7 @@
     </p>
 <figure class="text-center my-4">
   <img
-    src="/images/etl.jpg"
+    src="{base}/images/etl.jpg"
     alt="Lineage graph showing input-output dependencies"
     class="img-fluid my-3 lineage-img"
   />
@@ -54,8 +58,7 @@
 
     <p>
     This is where data provenance, or lineage, becomes essential
-    <sup class="text-primary" style="cursor:pointer;"
-    on:click={() => showFootnote = !showFootnote}>1</sup>.
+    <button type="button" class="sup-button" on:click={() => showFootnote = !showFootnote}><sup>1</sup></button>.
     Lineage answers simple but powerful questions: Where did this data come from?
     Which inputs and scripts produced it? What would break if something changed?
     These questions are fundamental to debugging, reproducibility, and trust in data.
@@ -107,8 +110,9 @@
 
   <h2 class="mt-4 mb-3">Follow-ups</h2>
   <ul>
-    <li><a class="link-primary" href="/part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li>
-    <li><a class="link-primary" href="/part-b">Lineage as a DuckDB Extension</a></li>
+    <li><a class="link-primary" href="{base}/part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li>
+    <li><a class="link-primary" href="{base}/part-b">What-ifs: Sparse Encoding</a></li>
+    <li><a class="link-primary" href="{base}/part-c">Lineage as a DuckDB Extension</a></li>
   </ul>
  
 </main>

@@ -98,7 +98,7 @@ The basic approach is:
       <th>rowid</th>
       <th>customer_iid</th>
       <th>orders_iid</th>
-      <th>Polynomial Term</th>
+      <!--th>Polynomial Term</th-->
     </tr>
   </thead>
   <tbody>
@@ -107,7 +107,7 @@ The basic approach is:
         <td>{row.oid}</td>
         <td>{row.customer_iid}</td>
         <td>{row.orders_iid}</td>
-        <td><code>{row.polynomial}</code></td>
+        <!--td><code>{row.polynomial}</code></td-->
       </tr>
     {/each}
   </tbody>
