@@ -6,7 +6,9 @@
 <h1>Part C: Lineage as a DuckDB Extension</h1>
 
 <p>
-Manually capturing lineage in SQL quickly becomes cumbersome. For example, to track which input tuples contributed to each output row for a query like Q1, you would have to write something like:
+Manually capturing lineage in SQL quickly becomes cumbersome.
+For example, to track which input tuples contributed to each output row for a query like Q1,
+you would have to write something like:
 </p>
 
 <pre><code class="language-sql">
@@ -27,42 +29,28 @@ SELECT * FROM lineage_edges;
 </code></pre>
 
 <p>
-Even for a simple query, the rewrite involves multiple steps: assigning output row IDs, collecting input row lists, and unnesting them into edges.
-As queries get more complex—with joins, aggregations, or nested subqueries—this approach quickly becomes error-prone and hard to maintain.
+Even for a simple query, the rewrite involves multiple steps:
+signing output row IDs and propagate input row IDs through query execution.
+As queries get more complex ( with joins, aggregations, or nested subqueries) this
+approach quickly becomes error-prone and hard to maintain.
 </p>
 
 <p>
-The <strong>DuckDB lineage extension</strong> solves this problem by automatically capturing fine-grained lineage at the logical plan level.
-It adds annotation columns to track input-to-output dependencies, persists them in memory, and still returns the original query results.
+The <strong>DuckDB lineage extension</strong> solves this problem by automatically
+applying the rewrite at the logical plan level.
+It adds annotation columns to track input-to-output dependencies, persists them in memory,
+and returns the original query results.
 </p>
 
 <p>
 Users can enable lineage capture with a single command:
+<code>PRAGMA set_lineage(True);</code>, run their unmodified queries, 
+then access lineage edges through a simple table function:
 </p>
 
-<pre><code class="language-sql">
-LOAD 'lineage.duckdb_extension';
-PRAGMA set_lineage(True);
-
--- execute any query as usual
-SELECT c.name, SUM(o.value) AS total_spend
-FROM customer c
-JOIN orders o USING (cid)
-GROUP BY c.name;
-
-PRAGMA set_lineage(False);
-</code></pre>
-
-<p>
-Once the query finishes, lineage edges are available through a simple table function:
-</p>
-
-<pre><code class="language-sql">
-SELECT *
-FROM read_block(
-    (SELECT max(query_id) FROM pragma_latest_qid())
-);
-</code></pre>
+<center><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></center>
 
 <h4>Downloading and Using the Extension</h4>
 
@@ -91,26 +79,146 @@ con.execute("LOAD 'lineage';")
 # Enable lineage capture
 con.execute("PRAGMA set_lineage(True)")
 
-# Execute any query as usual
-con.execute("""
-    SELECT c.name, SUM(o.value) AS total_spend
+# Execute query
+con.execute("""SELECT c.name, SUM(o.value) AS total_spend
     FROM customer c
     JOIN orders o USING (cid)
-    GROUP BY c.name
-""")
+    GROUP BY c.name""")
 
 # Disable lineage capture
 con.execute("PRAGMA set_lineage(False)")
 
-lineage_edges = con.execute(f"SELECT *
-FROM read_block(
-    (SELECT max(query_id) FROM pragma_latest_qid())
+lineage_edges = con.execute(f"SELECT * FROM read_block(
+    (SELECT max(query_id) FROM lineage_meta())
 );").fetchdf()
 </code></pre>
 
 <p>
-This setup allows you to capture full fine-grained lineage without rewriting queries or modifying your workflow.
+This setup allows you to capture full row lineage without rewriting queries or modifying your workflow.
 </p>
+
+<h2 class="mt-4 mb-3">How the Query Plan is Modified</h2>
+
+<p>
+The lineage extension automatically modifies the query plan at the operator level to propagate annotations efficiently. Each operator only adds the minimal annotation necessary, and complex lineage is stripped before propagating upstream.
+</p>
+
+<ul>
+  <li><strong>Leaf operators (table scans)</strong> are modified to include a <code>rowid</code> column, uniquely identifying each input tuple.</li>
+  <li><strong>One-to-one operators</strong> like <code>FILTER</code> and <code>PROJECTION</code> propagate the input annotation column to the output.</li>
+  <li><strong>Join operators</strong> propagate annotations from both children to the output. For semi/anti joins, only the relevant side is propagated.</li>
+  <li><strong>One-to-many operators</strong> like <code>AGGREGATION</code> accumulate input annotations using a <code>LIST()</code> function per output group.</li>
+  <li>After operators producing complex lineage annotations, a <strong>Lineage Operator</strong> is inserted. It strips detailed annotations from the output, leaving a single <code>rowid</code> column for the parent operator.</li>
+</ul>
+
+<p>
+Conceptually, a simple query plan like <code>A ⋈ B → AGG</code> is transformed as follows:
+</p>
+
+  <center>
+<pre><code class="language-text">
+Original Plan
+=============
+
+        Aggregate
+            │
+           Join
+         ┌───┴───┐
+     TableScan(A) TableScan(B)
+
+
+
+Plan with Lineage Instrumentation
+==================================
+
+   LineageOp  (strip LIST(rowid))
+            │
+        Aggregate  (LIST(rowid))
+            │
+   LineageOp  (strip A.rowid, B.rowid → add rowid)
+            │
+        Join  (+A.rowid, +B.rowid)
+         ┌───────┴────────┐
+TableScan(A) +rowid   TableScan(B) +rowid
+</code></pre>
+  </center>
+
+
+<p>
+At each stage, the extension ensures that only the minimal annotation necessary is propagated upstream. The root operator also receives a final Lineage Operator to strip annotations before returning results to the user.
+</p>
+<section>
+  <h2 class="mt-4 mb-3">From Per-Operator Lineage to an SPJUA Lineage Block</h2>
+
+  <p>
+  So far, we described how the extension captures lineage after a join or an aggregation.
+  But users typically don’t want this level of details,  they want lineage for the <strong>entire SPJUA query</strong>.
+  To bridge this gap, the extension <strong>constructs a unified lineage block</strong> by composing the lineage captured.
+  </p>
+
+  <h3>What Is an SPJUA Lineage Block?</h3>
+  <p>
+    For a query consisting of:
+    <strong>S</strong>elect, <strong>P</strong>roject, <strong>J</strong>oin, <strong>U</strong>nion, <strong>A</strong>ggregate.
+  </p>
+
+  <p>We construct a lineage block that:</p>
+  <ul>
+    <li>Has <strong>one column per base table access</strong></li>
+    <li>Contains an additional column representing the <strong>output tuple id</strong></li>
+    <li>Encodes the mapping: <em>which input tuples contributed to which output tuple</em></li>
+  </ul>
+
+  <center>
+  <pre><code class="language-text">
+orders_tid | customer_tid | lineitem_tid | output_tid
+-----------|--------------|--------------|----------
+4          | 2            | 7            | 0
+5          | 2            | 8            | 1
+...        | ...          | ...          | ...
+  </code></pre>
+  </center>
+
+  <p>
+    Each row represents a <em>provenance relationship</em>:
+  </p>
+    <ul>
+      <li>Input tuple IDs from base tables</li>
+      <li>The output tuple they contributed to</li>
+    </ul>
+
+  <h3>How the User Accesses It</h3>
+  <p>
+    Once a query finishes, the extension materializes the lineage block internally.  
+    Users can retrieve the latest lineage block via:
+  </p>
+
+<center><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></center>
+
+  <p>
+    This returns a table where:
+  </p>
+    <ul>
+      <li>Each column corresponds to a base table accessed by the query</li>
+      <li>An additional column encodes the output tuple id</li>
+      <li>Each row encodes one complete provenance mapping</li>
+    </ul>
+
+  <h3>Why This Matters</h3>
+  <p>
+    Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
+    Composing them into a <strong>single SPJUA lineage block</strong> provides:
+    A clean user-facing abstraction and a compact representation of multi-table dependencies.
+  </p>
+</section>
+
+
+<h3>Development Plan</h3>
+
+<p>We plan to extend the DuckDB lineage extension to support all major logical operators and capture full input-to-output mappings per SPJUA block.
+Short-circuit optimizations will be disabled to ensure complete lineage, making query provenance fully accessible via <code>read_block()</code>.</p>
 
 <h2 class="mt-4 mb-3">Follow-ups</h2>
 <ul>
