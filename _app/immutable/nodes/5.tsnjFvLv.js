@@ -1,4 +1,4 @@
-import{f as h,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as b,s as i,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as s}from"../chunks/BkhsGIdK.js";var f=h(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
+import{f as h,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as b,s as i,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as s}from"../chunks/BM43ke9o.js";var f=h(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
 For example, to track which input tuples contributed to each output row for a query like Q1,
 you would have to write something like:</p> <pre><code class="language-sql">WITH Q1_w_lineage AS (
     SELECT row_number() OVER () AS rowid,

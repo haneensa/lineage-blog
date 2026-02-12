@@ -6,19 +6,19 @@
 		
 		<link href="./_app/immutable/assets/0.DBkz-poX.css" rel="stylesheet">
 		<link href="./_app/immutable/assets/2.CnCRY4hO.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.BqH9CR6U.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/B2SM0ery.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.CH1pF78i.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/C46wbUJ0.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DxiQdkCR.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BkhsGIdK.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/BM43ke9o.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/D-H5QWnO.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.DVwF61vj.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.BINxmQ5Y.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DQRcQ8WQ.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/Kp7sLg-y.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/CXLViFzr.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/0.DFgVQ6YI.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.IB6bZStO.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/CpO_WCtV.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DvSqlD5E.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/2.ClkxHZKN.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/2.mbr9b7ma.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/CZ1LnZdr.js">
     <title>Lineage</title>
 	</head>
@@ -66,7 +66,7 @@ For example, the lineage for each output row of Q1 can be written directly as a 
 By assigning different values to the variables and how we interpret the binary operators <code>(+,x)</code>,
 we can perform a wide range of practical analyses, such as:</p> <ul><li><strong>Aggregates:</strong> count(), sum(), or average() over any subset of inputs</li> <li><strong>Confidentiality scoring:</strong> propagate sensitivity levels from inputs to outputs</li> <li><strong>Probabilistic reasoning:</strong> evaluate uncertainty over inputs</li> <li>View maintenance: quickly determine which outputs to keep or delete</li> <li><strong>“What-if” scenarios:</strong> simulate deletions, updates, or modifications of input rows</li></ul><!----> <h2>How to model lineage in the Relational Model?</h2> <p>While provenance polynomials give a compact mathematical view of lineage, we also need a way to represent and query this information in practice,
 using the tools data engineers and analysts already have.</p> <p>In relational databases, we can encode the lineage graph by tracking, for each output row, which input tuples contributed to it.
-The basic approach is:</p> <ul><li>Assign a unique <strong>row ID</strong> to each input tuple (for example, using the tuple's position in <code>customer</code> and <code>orders</code> tables).</li> <li>For each output row, store the <strong>list of contributing input row IDs</strong>.</li> <li>Optinoally use <code>UNNEST</code> operations to generate a <strong>lineage_edges</strong> table of edges connecting inputs to outputs.</li></ul> <p>For our Q1 example, this can be expressed in SQL as:</p> <pre><code class="language-sql">WITH Q1_w_lineage AS (
+The basic approach is:</p> <ul><li>Assign a unique <strong>row ID</strong> to each input tuple (for example, using the tuple's position in <code>customer</code> and <code>orders</code> tables).</li> <li>For each output row, store the <strong>list of contributing input row IDs</strong>.</li> <li>Optionally use <code>UNNEST</code> operations to generate a <strong>lineage_edges</strong> table of edges connecting inputs to outputs.</li></ul> <p>For our Q1 example, this can be expressed in SQL as:</p> <pre><code class="language-sql">WITH Q1_w_lineage AS (
 SELECT row_number() OVER () AS rowid,
        c.name, sum(o.value),
        LIST(c.rowid) as cust_iids,
@@ -131,7 +131,7 @@ but a practical engine for reasoning about data, policies, and transformations.<
 			
 			<script>
 				{
-					__sveltekit_1h5zu7u = {
+					__sveltekit_j74zml = {
 						base: new URL(".", location).pathname.slice(0, -1),
 						assets: "/lineage-blog"
 					};
@@ -139,8 +139,8 @@ but a practical engine for reasoning about data, policies, and transformations.<
 					const element = document.currentScript.parentElement;
 
 					Promise.all([
-						import("./_app/immutable/entry/start.BqH9CR6U.js"),
-						import("./_app/immutable/entry/app.DVwF61vj.js")
+						import("./_app/immutable/entry/start.CH1pF78i.js"),
+						import("./_app/immutable/entry/app.BINxmQ5Y.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element, {
 							node_ids: [0, 2],
