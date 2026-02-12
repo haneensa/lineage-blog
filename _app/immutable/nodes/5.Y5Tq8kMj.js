@@ -1,27 +1,4 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="./_app/immutable/assets/0.DBkz-poX.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.BSLp0D6Z.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BuvQGgI_.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DxiQdkCR.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BqpTCtL9.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/D-H5QWnO.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.B3zks8Wi.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DQRcQ8WQ.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/Kp7sLg-y.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/CXLViFzr.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/0.CXFnbz4i.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/CpO_WCtV.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DvSqlD5E.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/5.Y5Tq8kMj.js">
-    <title>Lineage</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<!--[--><!--[--><!----><nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container"><a class="navbar-brand" href=".">Lineage Blog</a> <div class="collapse navbar-collapse"><ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href=".">Main Post</a></li> <li class="nav-item"><a class="nav-link" href="./part-a">Part A</a></li> <li class="nav-item"><a class="nav-link" href="./part-b">Part B</a></li> <li class="nav-item"><a class="nav-link" href="./part-c">Part C</a></li></ul></div></div></nav> <main class="mx-5 my-5"><!--[--><!----><main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
+import{f as h,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as b,s as i,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as s}from"../chunks/BqpTCtL9.js";var f=h(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
 For example, to track which input tuples contributed to each output row for a query like Q1,
 you would have to write something like:</p> <pre><code class="language-sql">
 WITH Q1_w_lineage AS (
@@ -52,7 +29,7 @@ python3 https://github.com/haneensa/lineage/blob/main/scripts/download_extension
 import duckdb
 
 # Allow unsigned extensions when connecting
-con = duckdb.connect(config={  'allow_unsigned_extensions': True  })
+con = duckdb.connect(config=&#123; &nbsp;'allow_unsigned_extensions': True&nbsp; &#125)
 
 # Load the lineage extension
 con.execute("LOAD 'lineage';")
@@ -108,31 +85,4 @@ orders_tid | customer_tid | lineitem_tid | output_tid
     Users can retrieve the latest lineage block via:</p> <center><code class="language-sql">SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );</code></center> <p>This returns a table where:</p> <ul><li>Each column corresponds to a base table accessed by the query</li> <li>An additional column encodes the output tuple id</li> <li>Each row encodes one complete provenance mapping</li></ul> <h3>Why This Matters</h3> <p>Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
     Composing them into a <strong>single SPJUA lineage block</strong> provides:
     A clean user-facing abstraction and a compact representation of multi-table dependencies.</p></section> <h3>Development Plan</h3> <p>We plan to extend the DuckDB lineage extension to support all major logical operators and capture full input-to-output mappings per SPJUA block.
-Short-circuit optimizations will be disabled to ensure complete lineage, making query provenance fully accessible via <code>read_block()</code>.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="./part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="./part-b">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary" href=".">← Back to main post</a></li></ul></main><!----><!--]--></main><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_1qibqwg = {
-						base: new URL(".", location).pathname.slice(0, -1),
-						assets: "/lineage-blog"
-					};
-
-					const element = document.currentScript.parentElement;
-
-					Promise.all([
-						import("./_app/immutable/entry/start.BSLp0D6Z.js"),
-						import("./_app/immutable/entry/app.B3zks8Wi.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 5],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		
-	</body>
-</html>
-
+Short-circuit optimizations will be disabled to ensure complete lineage, making query provenance fully accessible via <code>read_block()</code>.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary">← Back to main post</a></li></ul></main>`);function A(p){var o=f(),l=i(e(o),46),n=e(l),u=e(n);t(n);var a=i(n,2),d=e(a);t(a);var c=i(a,2),g=e(c);t(c),t(l),t(o),b(()=>{r(u,"href",`${s??""}/part-a`),r(d,"href",`${s??""}/part-b`),r(g,"href",s)}),m(p,o)}export{A as component};
