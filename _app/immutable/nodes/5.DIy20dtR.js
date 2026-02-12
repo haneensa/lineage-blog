@@ -1,7 +1,6 @@
-import{f as h,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as b,s as i,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as s}from"../chunks/BqpTCtL9.js";var f=h(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
+import{f as h,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as b,s as i,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as s}from"../chunks/BkhsGIdK.js";var f=h(`<main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
 For example, to track which input tuples contributed to each output row for a query like Q1,
-you would have to write something like:</p> <pre><code class="language-sql">
-WITH Q1_w_lineage AS (
+you would have to write something like:</p> <pre><code class="language-sql">WITH Q1_w_lineage AS (
     SELECT row_number() OVER () AS rowid,
            c.name, SUM(o.value),
            LIST(c.rowid) AS cust_iids,
@@ -22,11 +21,11 @@ approach quickly becomes error-prone and hard to maintain.</p> <p>The <strong>Du
 applying the rewrite at the logical plan level.
 It adds annotation columns to track input-to-output dependencies, persists them in memory,
 and returns the original query results.</p> <p>Users can enable lineage capture with a single command: <code>PRAGMA set_lineage(True);</code>, run their unmodified queries, 
-then access lineage edges through a simple table function:</p> <center><code class="language-sql">SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );</code></center> <h4>Downloading and Using the Extension</h4> <p>The DuckDB lineage extension is not yet officially verified, but you can download it directly from GitHub artifacts using the provided script:</p> <pre><code class="language-bash">
-# download lineage.duckdb_extension from GitHub artifacts
+then access lineage edges through a simple table function:</p> <pre><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></pre> <h4>Downloading and Using the Extension</h4> <p>The DuckDB lineage extension is not yet officially verified, but you can download it directly from GitHub artifacts using the provided script:</p> <pre><code class="language-bash"># download lineage.duckdb_extension from GitHub artifacts
 python3 https://github.com/haneensa/lineage/blob/main/scripts/download_extension.py
-</code></pre> <p>To use the extension in DuckDB, make sure to allow unsigned extensions when connecting:</p> <pre><code class="language-python">
-import duckdb
+</code></pre> <p>To use the extension in DuckDB, make sure to allow unsigned extensions when connecting:</p> <pre><code class="language-python">import duckdb
 
 # Allow unsigned extensions when connecting
 con = duckdb.connect(config=&#123; &nbsp;'allow_unsigned_extensions': True&nbsp; &#125)
@@ -82,7 +81,9 @@ orders_tid | customer_tid | lineitem_tid | output_tid
 5          | 2            | 8            | 1
 ...        | ...          | ...          | ...
   </code></pre></center> <p>Each row represents a <em>provenance relationship</em>:</p> <ul><li>Input tuple IDs from base tables</li> <li>The output tuple they contributed to</li></ul> <h3>How the User Accesses It</h3> <p>Once a query finishes, the extension materializes the lineage block internally.  
-    Users can retrieve the latest lineage block via:</p> <center><code class="language-sql">SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );</code></center> <p>This returns a table where:</p> <ul><li>Each column corresponds to a base table accessed by the query</li> <li>An additional column encodes the output tuple id</li> <li>Each row encodes one complete provenance mapping</li></ul> <h3>Why This Matters</h3> <p>Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
+    Users can retrieve the latest lineage block via:</p> <pre><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></pre> <p>This returns a table where:</p> <ul><li>Each column corresponds to a base table accessed by the query</li> <li>An additional column encodes the output tuple id</li> <li>Each row encodes one complete provenance mapping</li></ul> <h3>Why This Matters</h3> <p>Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
     Composing them into a <strong>single SPJUA lineage block</strong> provides:
     A clean user-facing abstraction and a compact representation of multi-table dependencies.</p></section> <h3>Development Plan</h3> <p>We plan to extend the DuckDB lineage extension to support all major logical operators and capture full input-to-output mappings per SPJUA block.
 Short-circuit optimizations will be disabled to ensure complete lineage, making query provenance fully accessible via <code>read_block()</code>.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary">← Back to main post</a></li></ul></main>`);function A(p){var o=f(),l=i(e(o),46),n=e(l),u=e(n);t(n);var a=i(n,2),d=e(a);t(a);var c=i(a,2),g=e(c);t(c),t(l),t(o),b(()=>{r(u,"href",`${s??""}/part-a`),r(d,"href",`${s??""}/part-b`),r(g,"href",s)}),m(p,o)}export{A as component};

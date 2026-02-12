@@ -5,26 +5,25 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		
 		<link href="./_app/immutable/assets/0.DBkz-poX.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.BSLp0D6Z.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BuvQGgI_.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/start.BqH9CR6U.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/B2SM0ery.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DxiQdkCR.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BqpTCtL9.js">
+		<link rel="modulepreload" href="./_app/immutable/chunks/BkhsGIdK.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/D-H5QWnO.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.B3zks8Wi.js">
+		<link rel="modulepreload" href="./_app/immutable/entry/app.DVwF61vj.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DQRcQ8WQ.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/Kp7sLg-y.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/CXLViFzr.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/0.CXFnbz4i.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/0.DFgVQ6YI.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/CpO_WCtV.js">
 		<link rel="modulepreload" href="./_app/immutable/chunks/DvSqlD5E.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/5.Y5Tq8kMj.js">
+		<link rel="modulepreload" href="./_app/immutable/nodes/5.DIy20dtR.js">
     <title>Lineage</title>
 	</head>
 	<body data-sveltekit-preload-data="hover">
 		<!--[--><!--[--><!----><nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container"><a class="navbar-brand" href=".">Lineage Blog</a> <div class="collapse navbar-collapse"><ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href=".">Main Post</a></li> <li class="nav-item"><a class="nav-link" href="./part-a">Part A</a></li> <li class="nav-item"><a class="nav-link" href="./part-b">Part B</a></li> <li class="nav-item"><a class="nav-link" href="./part-c">Part C</a></li></ul></div></div></nav> <main class="mx-5 my-5"><!--[--><!----><main class="container-fluid"><h1>Part C: Lineage as a DuckDB Extension</h1> <p>Manually capturing lineage in SQL quickly becomes cumbersome.
 For example, to track which input tuples contributed to each output row for a query like Q1,
-you would have to write something like:</p> <pre><code class="language-sql">
-WITH Q1_w_lineage AS (
+you would have to write something like:</p> <pre><code class="language-sql">WITH Q1_w_lineage AS (
     SELECT row_number() OVER () AS rowid,
            c.name, SUM(o.value),
            LIST(c.rowid) AS cust_iids,
@@ -45,11 +44,11 @@ approach quickly becomes error-prone and hard to maintain.</p> <p>The <strong>Du
 applying the rewrite at the logical plan level.
 It adds annotation columns to track input-to-output dependencies, persists them in memory,
 and returns the original query results.</p> <p>Users can enable lineage capture with a single command: <code>PRAGMA set_lineage(True);</code>, run their unmodified queries, 
-then access lineage edges through a simple table function:</p> <center><code class="language-sql">SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );</code></center> <h4>Downloading and Using the Extension</h4> <p>The DuckDB lineage extension is not yet officially verified, but you can download it directly from GitHub artifacts using the provided script:</p> <pre><code class="language-bash">
-# download lineage.duckdb_extension from GitHub artifacts
+then access lineage edges through a simple table function:</p> <pre><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></pre> <h4>Downloading and Using the Extension</h4> <p>The DuckDB lineage extension is not yet officially verified, but you can download it directly from GitHub artifacts using the provided script:</p> <pre><code class="language-bash"># download lineage.duckdb_extension from GitHub artifacts
 python3 https://github.com/haneensa/lineage/blob/main/scripts/download_extension.py
-</code></pre> <p>To use the extension in DuckDB, make sure to allow unsigned extensions when connecting:</p> <pre><code class="language-python">
-import duckdb
+</code></pre> <p>To use the extension in DuckDB, make sure to allow unsigned extensions when connecting:</p> <pre><code class="language-python">import duckdb
 
 # Allow unsigned extensions when connecting
 con = duckdb.connect(config={  'allow_unsigned_extensions': True  })
@@ -105,14 +104,16 @@ orders_tid | customer_tid | lineitem_tid | output_tid
 5          | 2            | 8            | 1
 ...        | ...          | ...          | ...
   </code></pre></center> <p>Each row represents a <em>provenance relationship</em>:</p> <ul><li>Input tuple IDs from base tables</li> <li>The output tuple they contributed to</li></ul> <h3>How the User Accesses It</h3> <p>Once a query finishes, the extension materializes the lineage block internally.  
-    Users can retrieve the latest lineage block via:</p> <center><code class="language-sql">SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );</code></center> <p>This returns a table where:</p> <ul><li>Each column corresponds to a base table accessed by the query</li> <li>An additional column encodes the output tuple id</li> <li>Each row encodes one complete provenance mapping</li></ul> <h3>Why This Matters</h3> <p>Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
+    Users can retrieve the latest lineage block via:</p> <pre><code class="language-sql">
+SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
+  </code></pre> <p>This returns a table where:</p> <ul><li>Each column corresponds to a base table accessed by the query</li> <li>An additional column encodes the output tuple id</li> <li>Each row encodes one complete provenance mapping</li></ul> <h3>Why This Matters</h3> <p>Capturing lineage per operator keeps overhead low and integrates naturally with DuckDB’s execution engine.
     Composing them into a <strong>single SPJUA lineage block</strong> provides:
     A clean user-facing abstraction and a compact representation of multi-table dependencies.</p></section> <h3>Development Plan</h3> <p>We plan to extend the DuckDB lineage extension to support all major logical operators and capture full input-to-output mappings per SPJUA block.
 Short-circuit optimizations will be disabled to ensure complete lineage, making query provenance fully accessible via <code>read_block()</code>.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="./part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="./part-b">What-ifs: Sparse Encoding</a></li> <li><a class="link-primary" href=".">← Back to main post</a></li></ul></main><!----><!--]--></main><!----><!--]--> <!--[!--><!--]--><!--]-->
 			
 			<script>
 				{
-					__sveltekit_1qibqwg = {
+					__sveltekit_1h5zu7u = {
 						base: new URL(".", location).pathname.slice(0, -1),
 						assets: "/lineage-blog"
 					};
@@ -120,8 +121,8 @@ Short-circuit optimizations will be disabled to ensure complete lineage, making 
 					const element = document.currentScript.parentElement;
 
 					Promise.all([
-						import("./_app/immutable/entry/start.BSLp0D6Z.js"),
-						import("./_app/immutable/entry/app.B3zks8Wi.js")
+						import("./_app/immutable/entry/start.BqH9CR6U.js"),
+						import("./_app/immutable/entry/app.DVwF61vj.js")
 					]).then(([kit, app]) => {
 						kit.start(app, element, {
 							node_ids: [0, 5],

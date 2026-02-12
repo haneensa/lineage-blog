@@ -1,37 +1,12 @@
-<!doctype html>
-<html lang="en">
-	<head>
-		<meta charset="utf-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
-		
-		<link href="./_app/immutable/assets/0.DBkz-poX.css" rel="stylesheet">
-		<link rel="modulepreload" href="./_app/immutable/entry/start.BqH9CR6U.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/B2SM0ery.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DxiQdkCR.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/BkhsGIdK.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/D-H5QWnO.js">
-		<link rel="modulepreload" href="./_app/immutable/entry/app.DVwF61vj.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DQRcQ8WQ.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/Kp7sLg-y.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/CXLViFzr.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/0.DFgVQ6YI.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/CpO_WCtV.js">
-		<link rel="modulepreload" href="./_app/immutable/chunks/DvSqlD5E.js">
-		<link rel="modulepreload" href="./_app/immutable/nodes/4.B6r9C1Pq.js">
-    <title>Lineage</title>
-	</head>
-	<body data-sveltekit-preload-data="hover">
-		<!--[--><!--[--><!----><nav class="navbar navbar-expand-lg navbar-dark bg-dark"><div class="container"><a class="navbar-brand" href=".">Lineage Blog</a> <div class="collapse navbar-collapse"><ul class="navbar-nav ms-auto"><li class="nav-item"><a class="nav-link" href=".">Main Post</a></li> <li class="nav-item"><a class="nav-link" href="./part-a">Part A</a></li> <li class="nav-item"><a class="nav-link" href="./part-b">Part B</a></li> <li class="nav-item"><a class="nav-link" href="./part-c">Part C</a></li></ul></div></div></nav> <main class="mx-5 my-5"><!--[--><!----><main><h1>Part B: Encoding Many Hypothetical Updates Efficiently</h1> <p>In Part A, we learned how <strong>bit-packed masks</strong> let us evaluate up to 64 hypothetical updates in parallel. But real-world scenarios often involve hundreds or thousands of interventions. 
+import{f as g,a as m}from"../chunks/Kp7sLg-y.js";import"../chunks/CpO_WCtV.js";import{t as f,s,h as e,i as t}from"../chunks/DxiQdkCR.js";import{s as r}from"../chunks/DvSqlD5E.js";import{b as n}from"../chunks/BkhsGIdK.js";var x=g(`<main><h1>Part B: Encoding Many Hypothetical Updates Efficiently</h1> <p>In Part A, we learned how <strong>bit-packed masks</strong> let us evaluate up to 64 hypothetical updates in parallel. But real-world scenarios often involve hundreds or thousands of interventions. 
 A straightforward approach — storing a boolean column per update — quickly becomes infeasible.</p> <p>Here, <strong>sparse encoding</strong> comes to the rescue. It exploits structure in common update predicates to drastically reduce memory and computation costs.</p> <hr/> <h2>From Dense Boolean Matrices to Sparse Codes</h2> <p>Consider hypothetical updates of the form:</p> <ul><li><code>v = ?</code> (equality predicates)</li> <li><code>v ≤ ?</code> (range predicates)</li></ul> <p>In a dense boolean matrix, each distinct value of <code>?</code> would require a separate column.
 But for equality predicates, each row belongs to exactly one value.
 Instead of storing <em>n</em> booleans per row, we can store a single integer code:</p> <pre><code>
-row.code ∈ {0, …, n−1}
+row.code ∈ &#123;0, …, n−1&#125;
 </code></pre> <p>An intervention <code>k</code> then corresponds to removing rows where <code>row.code = k</code>.
-This turns a dense target matrix into a <strong>dictionary-encoded sparse representation</strong>.</p> <hr/> <h2>Visual: Dense vs Sparse Encoding</h2> <svg width="520" height="200" viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg" style="margin: 1em 0;"><style>
-    text { font-family: monospace; font-size: 12px; }
+This turns a dense target matrix into a <strong>dictionary-encoded sparse representation</strong>.</p> <hr/> <h2>Visual: Dense vs Sparse Encoding</h2> <svg width="520" height="200" viewBox="0 0 520 200" xmlns="http://www.w3.org/2000/svg" style="margin: 1em 0;"><style>text { font-family: monospace; font-size: 12px; }
     .title { font-weight: bold; }
-    .box { fill: none; stroke: #333; }
-  </style><text x="20" y="20" class="title">Dense Boolean Matrix</text><rect x="20" y="30" width="220" height="120" class="box"></rect><text x="30" y="55">row × updates</text><text x="30" y="75">1 0 0</text><text x="30" y="95">0 1 0</text><text x="30" y="115">0 0 1</text><text x="255" y="95">⇒</text><text x="300" y="20" class="title">Sparse Encoding</text><rect x="300" y="30" width="180" height="120" class="box"></rect><text x="310" y="55">row → code</text><text x="310" y="75">1 → 0</text><text x="310" y="95">2 → 0</text><text x="310" y="115">3 → 1</text></svg> <h3>Concrete Example: Customer and Orders</h3> <p>Suppose we want to test a hypothetical update: <strong>remove all orders for Hannah (cid=1)</strong>.  
+    .box { fill: none; stroke: #333; }</style><text x="20" y="20" class="title">Dense Boolean Matrix</text><rect x="20" y="30" width="220" height="120" class="box"></rect><text x="30" y="55">row × updates</text><text x="30" y="75">1 0 0</text><text x="30" y="95">0 1 0</text><text x="30" y="115">0 0 1</text><text x="255" y="95">⇒</text><text x="300" y="20" class="title">Sparse Encoding</text><rect x="300" y="30" width="180" height="120" class="box"></rect><text x="310" y="55">row → code</text><text x="310" y="75">1 → 0</text><text x="310" y="95">2 → 0</text><text x="310" y="115">3 → 1</text></svg> <h3>Concrete Example: Customer and Orders</h3> <p>Suppose we want to test a hypothetical update: <strong>remove all orders for Hannah (cid=1)</strong>.  
 A dense matrix would have a separate column for each intervention, mostly zeros.  
 With sparse codes, we can assign:</p> <pre><code>
 row.code → 0 (Hannah), 1 (Alex), 2 (Maya)
@@ -76,31 +51,4 @@ Each intervention is a partition of the data, and aggregates can be computed eff
 Given a selected set of outlier points and a set of points that align with user expectations,
 the engine explores a space of predicates and identifies the most influential ones explaining the outliers.
 In this demo, it considers predicates of the form (attr = ?) and (attr v ≤ ?) over voltage, sensor ID, light, and humidity, as well as their combinations.
-Concretely, it finds predicates such that removing the tuples matching them causes the outliers to disappear.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary" href="./part-a">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary" href="./part-c">Lineage as a DuckDB Extension</a></li> <li><a class="link-primary" href=".">← Back to main post</a></li></ul></main><!----><!--]--></main><!----><!--]--> <!--[!--><!--]--><!--]-->
-			
-			<script>
-				{
-					__sveltekit_1h5zu7u = {
-						base: new URL(".", location).pathname.slice(0, -1),
-						assets: "/lineage-blog"
-					};
-
-					const element = document.currentScript.parentElement;
-
-					Promise.all([
-						import("./_app/immutable/entry/start.BqH9CR6U.js"),
-						import("./_app/immutable/entry/app.DVwF61vj.js")
-					]).then(([kit, app]) => {
-						kit.start(app, element, {
-							node_ids: [0, 4],
-							data: [null,null],
-							form: null,
-							error: null
-						});
-					});
-				}
-			</script>
-		
-	</body>
-</html>
-
+Concretely, it finds predicates such that removing the tuples matching them causes the outliers to disappear.</p> <h2 class="mt-4 mb-3">Follow-ups</h2> <ul><li><a class="link-primary">What-ifs? How to evaluate many provenance polynomials fast</a></li> <li><a class="link-primary">Lineage as a DuckDB Extension</a></li> <li><a class="link-primary">← Back to main post</a></li></ul></main>`);function _(d){var o=x(),l=s(e(o),74),a=e(l),p=e(a);t(a);var i=s(a,2),h=e(i);t(i);var c=s(i,2),u=e(c);t(c),t(l),t(o),f(()=>{r(p,"href",`${n??""}/part-a`),r(h,"href",`${n??""}/part-c`),r(u,"href",n)}),m(d,o)}export{_ as component};
