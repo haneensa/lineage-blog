@@ -11,8 +11,7 @@ For example, to track which input tuples contributed to each output row for a qu
 you would have to write something like:
 </p>
 
-<pre><code class="language-sql">
-WITH Q1_w_lineage AS (
+<pre><code class="language-sql">WITH Q1_w_lineage AS (
     SELECT row_number() OVER () AS rowid,
            c.name, SUM(o.value),
            LIST(c.rowid) AS cust_iids,
@@ -48,9 +47,9 @@ Users can enable lineage capture with a single command:
 then access lineage edges through a simple table function:
 </p>
 
-<center><code class="language-sql">
+<pre><code class="language-sql">
 SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
-  </code></center>
+  </code></pre>
 
 <h4>Downloading and Using the Extension</h4>
 
@@ -58,8 +57,7 @@ SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
 The DuckDB lineage extension is not yet officially verified, but you can download it directly from GitHub artifacts using the provided script:
 </p>
 
-<pre><code class="language-bash">
-# download lineage.duckdb_extension from GitHub artifacts
+<pre><code class="language-bash"># download lineage.duckdb_extension from GitHub artifacts
 python3 https://github.com/haneensa/lineage/blob/main/scripts/download_extension.py
 </code></pre>
 
@@ -67,8 +65,7 @@ python3 https://github.com/haneensa/lineage/blob/main/scripts/download_extension
 To use the extension in DuckDB, make sure to allow unsigned extensions when connecting:
 </p>
 
-<pre><code class="language-python">
-import duckdb
+<pre><code class="language-python">import duckdb
 
 # Allow unsigned extensions when connecting
 con = duckdb.connect(config=&#123; &nbsp;'allow_unsigned_extensions': True&nbsp; &#125)
@@ -193,9 +190,9 @@ orders_tid | customer_tid | lineitem_tid | output_tid
     Users can retrieve the latest lineage block via:
   </p>
 
-<center><code class="language-sql">
+<pre><code class="language-sql">
 SELECT * FROM read_block( (SELECT max(query_id) FROM lineage_meta()) );
-  </code></center>
+  </code></pre>
 
   <p>
     This returns a table where:

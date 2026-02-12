@@ -99,11 +99,6 @@ GROUP BY c.name`;
   }
 </script>
 
-<style>
-  pre { background: #f5f5f5; padding: 1em; overflow-x: auto; }
-  .sql-columns { display: flex; gap: 1rem; flex-wrap: wrap; }
-  .sql-column { flex: 1; min-width: 300px; }
-</style>
 
 <div class="sql-columns">
   <div class="sql-column">
@@ -227,23 +222,24 @@ GROUP BY c.name`;
 
 
 <button class="btn btn-sm btn-outline-primary mb-2" on:click={() => showPolynomials = !showPolynomials}>
-{showPolynomials ? 'Hide Provenance' : 'Show Provenance'}
+{showPolynomials ? 'Hide metadata' : 'Show metadata'}
 </button>
 <p>
 The tables above show how lineage works at the tuple level. 
-For example, the last row in the output is linked to the last rows from orders and customer tables.
+For example, the last row in the output is produced by joining the last row in customer
+with the last two rows in orders then computing the sum over them. 
 By hovering over a customer or an order, you can see exactly which input rows contributed to each output.
 </p>
 
 <p>
 Hovering is just one way to visualize lineage.
 At its core, lineage is a graph connecting inputs to outputs, showing exactly how each input tuple contributes to each result.
-There are many ways to represent this graph physically. 
+There are many ways not only to represent this graph physically, but also conceptually. 
 </p>
 
 
 
 
-<ProvPoly {customerTable} {ordersTable} {outputsTable}/>
+<ProvPoly/>
 
-<LineageBlocks {customerTable} {ordersTable}/>
+<LineageBlocks {customerTable} {ordersTable} {outputsTable}/>

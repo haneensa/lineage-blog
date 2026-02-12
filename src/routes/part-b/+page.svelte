@@ -44,6 +44,37 @@ This turns a dense target matrix into a <strong>dictionary-encoded sparse repres
 
 <hr/>
 
+<h2>Visual: Dense vs Sparse Encoding</h2>
+
+<svg width="520" height="200" viewBox="0 0 520 200"
+     xmlns="http://www.w3.org/2000/svg" style="margin: 1em 0;">
+  <style>
+    text { font-family: monospace; font-size: 12px; }
+    .title { font-weight: bold; }
+    .box { fill: none; stroke: #333; }
+  </style>
+
+  <!-- Dense -->
+  <text x="20" y="20" class="title">Dense Boolean Matrix</text>
+  <rect x="20" y="30" width="220" height="120" class="box"/>
+  <text x="30" y="55">row × updates</text>
+  <text x="30" y="75">1 0 0</text>
+  <text x="30" y="95">0 1 0</text>
+  <text x="30" y="115">0 0 1</text>
+
+  <!-- Arrow -->
+  <text x="255" y="95">⇒</text>
+
+  <!-- Sparse -->
+  <text x="300" y="20" class="title">Sparse Encoding</text>
+  <rect x="300" y="30" width="180" height="120" class="box"/>
+  <text x="310" y="55">row → code</text>
+  <text x="310" y="75">1 → 0</text>
+  <text x="310" y="95">2 → 0</text>
+  <text x="310" y="115">3 → 1</text>
+</svg>
+
+
 <h3>Concrete Example: Customer and Orders</h3>
 
 <p>
@@ -75,23 +106,17 @@ FROM orders;
 
   <pre><code class="language-sql">
 SELECT
-    customer_id,
-    SUM(value) AS hypothetical_total
+    output_id, code,
+    COUNT() AS cnt,
 FROM orders_code o
 JOIN lineage_edges b ON o.rowid = b.orders_iid
-WHERE code != 1  -- remove rows with code = 1 (sensitive)
-GROUP BY customer_id;
+GROUP BY output_id, code;
   </code></pre>
 
   <p>
-    Each output row (customer) aggregates only the contributions of rows that satisfy the predicate.
+    Each output row aggregates only the contributions of rows that satisfy the predicate.
     The <code>row.code</code> encoding replaces a full boolean matrix and allows <strong>linear-time evaluation</strong> across all interventions.
   </p>
-
-
-<p>
-Evaluating this intervention reduces to summing the contribution of rows where <code>code = 0</code>.
-</p>
 
 <h3>Range Predicates and Prefix Sums</h3>
 
@@ -103,9 +128,7 @@ For range predicates like <code>order.value ≤ k</code>, each row contributes t
 Conceptually:
 </p>
 
-<pre><code>
-result(out, k) = total(out) − Σ rows with value ≤ k
-</code></pre>
+<pre><code>result(out, k) = total(out) − Σ rows with value ≤ k</code></pre>
 
 <p>
 In SQL, this can be implemented using a window function:
@@ -114,25 +137,24 @@ In SQL, this can be implemented using a window function:
 <pre><code class="language-sql">
 WITH agg AS (
     SELECT
-        o.cid AS customer,
-        o.value,
-        row_number() OVER (PARTITION BY o.cid ORDER BY o.value) AS rk,
-        COUNT(*) OVER (PARTITION BY o.cid) AS total
-    FROM orders o
+        e.output_id, o.value as x, sum(1) as v as total
+    FROM lineage_edges as e JOIN orders as o ON (e.orders_iid=o.rowid)
+    GROUP BY output_id, x
 )
 SELECT
-    customer,
-    rk,
-    total - SUM(1) OVER (
-        PARTITION BY customer
-        ORDER BY rk
+    output_id, x,
+    total - SUM(v) OVER (
+        PARTITION BY output_id
+        ORDER BY x
         ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
     ) AS remaining_rows
-FROM agg;
+FROM agg
+ORDER BY output_id, x;
 </code></pre>
 
 <p>
-Here, <code>SUM(1) OVER ...</code> acts as a prefix sum over the sparse codes, computing efficiently which rows remain under each threshold <code>rk</code>. This mirrors the bitwise evaluation of multiple what-ifs from Part A.
+Here, <code>SUM(1) OVER ...</code> acts as a prefix sum over the sparse codes, computing efficiently which rows remain under each threshold <code>x</code>.
+This mirrors the bitwise evaluation of multiple what-ifs from Part A.
 </p>
 
 <h3>Combining Equality and Range Predicates</h3>
@@ -149,36 +171,6 @@ More complex updates, e.g., <code>v = x AND w ≤ y</code>, can be handled by:
 This allows us to compute a two-dimensional space of updates without materializing a quadratic matrix.
 </p>
 
-<h2>Visual: Dense vs Sparse Encoding</h2>
-
-<svg width="520" height="200" viewBox="0 0 520 200"
-     xmlns="http://www.w3.org/2000/svg" style="margin: 1em 0;">
-  <style>
-    text { font-family: monospace; font-size: 12px; }
-    .title { font-weight: bold; }
-    .box { fill: none; stroke: #333; }
-  </style>
-
-  <!-- Dense -->
-  <text x="20" y="20" class="title">Dense Boolean Matrix</text>
-  <rect x="20" y="30" width="220" height="120" class="box"/>
-  <text x="30" y="55">row × updates</text>
-  <text x="30" y="75">1 0 0</text>
-  <text x="30" y="95">0 1 0</text>
-  <text x="30" y="115">0 0 1</text>
-
-  <!-- Arrow -->
-  <text x="255" y="95">⇒</text>
-
-  <!-- Sparse -->
-  <text x="300" y="20" class="title">Sparse Encoding</text>
-  <rect x="300" y="30" width="180" height="120" class="box"/>
-  <text x="310" y="55">row → code</text>
-  <text x="310" y="75">1 → 0</text>
-  <text x="310" y="95">2 → 0</text>
-  <text x="310" y="115">3 → 1</text>
-</svg>
-
 <h2>Why This Matters</h2>
 
 <ul>
@@ -191,6 +183,16 @@ This allows us to compute a two-dimensional space of updates without materializi
 <p>
 Sparse encodings align naturally with <strong>explanation engines</strong> and <strong>counterfactual search</strong>.  
 Each intervention is a partition of the data, and aggregates can be computed efficiently over codes, even when testing thousands of hypothetical updates.
+</p>
+
+<p>
+The following uses these concepts  <a href="https://haneensa.github.io/whatif-demo/" target="_blank">DEMO</a>
+We reimplement of <a href="http://sirrice.github.io/files/papers/scorpion-vldb13.pdf" target="_blank">Scorpion</a>
+explanation engine using this approach to evaluate hypothetical updates.
+Given a selected set of outlier points and a set of points that align with user expectations,
+the engine explores a space of predicates and identifies the most influential ones explaining the outliers.
+In this demo, it considers predicates of the form (attr = ?) and (attr v ≤ ?) over voltage, sensor ID, light, and humidity, as well as their combinations.
+Concretely, it finds predicates such that removing the tuples matching them causes the outliers to disappear.
 </p>
 
 

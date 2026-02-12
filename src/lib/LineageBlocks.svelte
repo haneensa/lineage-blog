@@ -1,6 +1,7 @@
 <script>
   export let customerTable; // receive as prop
   export let ordersTable;
+  export let outputsTable;
 
   const prov_sql = `WITH Q1_w_lineage AS (
 SELECT row_number() OVER () AS rowid,
@@ -14,16 +15,14 @@ SELECT rowid, UNNEST(cust_iids) customer_iid, UNNEST(orders_iids) orders_iid
 FROM Q1_w_lineage
 )
 SELECT * FROM lineage_edges;`
-const formula_sql = `
-SELECT
+const formula_sql = `SELECT
     rowid,
     STRING_AGG('c' || customer_iid || '*o' || orders_iid, ' + ') AS polynomial
 FROM lineage_edges
 GROUP BY rowid
 `;
 
-  const conf_sql = `
-# unclassified < sensitive < top_secret
+  const conf_sql = `# unclassified < sensitive < top_secret
 SELECT b.rowid,
     CASE MAX(
         CASE o.sensitivity
@@ -72,7 +71,7 @@ GROUP BY b.rowid
   });
 </script>
 
-<h2>Representation 2: SQL and the Relational Model</h2>
+<h2>How to model lineage in the Relational Model?</h2>
 <p>
 While provenance polynomials give a compact mathematical view of lineage, we also need a way to represent and query this information in practice,
 using the tools data engineers and analysts already have.
@@ -86,7 +85,8 @@ The basic approach is:
 <ul>
   <li>Assign a unique <strong>row ID</strong> to each input tuple (for example, using the tuple's position in <code>customer</code> and <code>orders</code> tables).</li>
   <li>For each output row, store the <strong>list of contributing input row IDs</strong>.</li>
-  <li>Use <code>UNNEST</code> and <code>JOIN</code> operations to generate a <strong>lineage_edges</strong> table of edges connecting inputs to outputs.</li>
+  <li>Optinoally use <code>UNNEST</code> operations to generate a <strong>lineage_edges</strong>
+  table of edges connecting inputs to outputs.</li>
 </ul>
 
 <p>For our Q1 example, this can be expressed in SQL as:</p>
@@ -127,14 +127,16 @@ but in a concrete relational format: each row corresponds to an <strong>edge in 
 Each row in the <code>lineage_edges</code> table connects an input customer (<code>customer_iid</code>) to an input order (<code>orders_iid</code>) for a specific output row (<code>oid</code>). We can reconstruct the provenance polynomial for each output by combining these edges: each term <code>cX*oY</code> represents a <strong>join of a customer and an order</strong> that contributed to the output. Using <code>STRING_AGG(..., ' + ')</code>, we sum all contributing terms, reflecting the <strong>addition in provenance polynomials</strong>.
 </p>
 
-<p>For our Q1 example, this produces:</p>
+<p>For our Q1 example, we also include orders.value, this produces:</p>
 
 <ul>
-  <li><strong>Hannah (rowid=1):</strong> c1*o1 + c1*o2 + c1*o4</li>
-  <li><strong>Alex (rowid=2):</strong> c2*o3</li>
-  <li><strong>Maya (rowid=3):</strong> c3*o5 + c3*o6</li>
+  {#each outputsTable as out}
+    <li>
+      <strong>{out.name} (oid={out.oid}):</strong> 
+      <code>{out.polynomial}</code>
+    </li>
+  {/each}
 </ul>
-
 <p>This provides a <strong>concrete, queryable representation</strong> of the abstract polynomial, bridging theory and practice while keeping it fully relational.</p>
 
 
@@ -184,7 +186,7 @@ Substituting these values yields:
 
 <p>
 <code>
-10·c1·1 + 100·c1·0 + 30·c1·1 = 40
+10*1*1 + 100·*1*0 + 30*1*1 = 40
 </code>
 </p>
 
@@ -194,8 +196,7 @@ The lineage edges identify exactly which input rows contributed to the output,
 allowing us to apply the hypothetical condition at evaluation time:
 </p>
 
-<pre><code class="language-sql">
-SELECT
+<pre><code class="language-sql">SELECT
   SUM(
     (o.sensitivity = 'unclassified')::INT * o.value
   ) AS hypothetical_total
@@ -207,8 +208,7 @@ WHERE e.rowid = 1;
 
 <p>
 By filtering on sensitivity during evaluation, we simulate deletions or policy changes
-and immediately observe their effect on the result—without touching the base tables
-or recomputing lineage.
+and immediately observe their effect on the result.
 </p>
 
 <h4>Use Case 3: View Maintenance</h4>

@@ -7,7 +7,7 @@
 <h1>Part A: What-ifs? Evaluating Many Provenance Polynomials Fast</h1>
 
 <p>
-Lineage isn’t just about knowing which inputs produced which outputs—it’s also a powerful tool for <em>what-if analysis</em>.  
+Lineage isn’t just about knowing which inputs produced which outputs. It’s also a powerful tool for <em>what-if analysis</em>.  
 Imagine asking: <strong>“What if we removed all sensitive orders?”</strong> or <strong>“What if we scaled certain orders by 2x?”</strong>
 With fine-grained lineage, we can evaluate these hypothetical updates quickly, without recomputing the full query from scratch.
 </p>
@@ -17,8 +17,7 @@ With fine-grained lineage, we can evaluate these hypothetical updates quickly, w
 Recall our earlier example with <code>customer</code> and <code>orders</code>:
 </p>
 
-<pre><code>
-Hannah (oid=1): c1*o1 + c1*o2 + c1*o4  
+<pre><code>Hannah (oid=1): c1*o1 + c1*o2 + c1*o4  
 Alex   (oid=2): c2*o3  
 Maya   (oid=3): c3*o5 + c3*o6
 </code></pre>
@@ -95,12 +94,12 @@ Using bitwise operations, we can evaluate up to 64 hypothetical scenarios in par
 Instead of recomputing queries, we can precompute a <code>target_matrix</code> with bit-packed predicates:
 </p>
 
-<pre><code class="language-sql">
-CREATE TABLE orders_tm AS
+<pre><code class="language-sql">CREATE TABLE orders_tm AS
 SELECT
     rowid AS iid,
     set_bit(bitstring('0',64),0,(sensitivity='unclassified')::int) | 
-    set_bit(bitstring('0',64),1,(value>50)::int) AS mask_0
+    set_bit(bitstring('0',64),1,(value>50)::int) |
+    set_bit(bitstring('0',64),2,(value>100)::int) AS mask_0
 FROM orders;
 </code></pre>
 
@@ -108,23 +107,6 @@ FROM orders;
 Now we can evaluate multiple what-if scenarios in a single query using lineage edges and bit masks:
 </p>
 
-<pre><code class="language-sql">
-SELECT
-    b.oid,
-    SUM(
-        (o.sensitivity = 'unclassified')::INT * o.value
-    ) AS hypothetical_total
-FROM lineage_edges AS b
-JOIN orders AS o
-    ON o.rowid = b.orders_iid
-WHERE b.oid = 1
-GROUP BY b.oid;
-</code></pre>
-
-<p>
-The lineage edges ensure only contributing orders are considered.
-Multiplying by the boolean predicate effectively sets excluded orders to 0.
-</p>
 
 <h5>Extending to Many Hypotheticals</h5>
 
@@ -153,6 +135,8 @@ GROUP BY b.oid;
 This approach accesses only the columns needed for aggregation.
 We can ship just the lineage block and bit-packed masks to the end user,
 avoiding full table scans and expensive joins.
+
+In addition, this reduces to matrix operations that can be evaluated using simple nested loops.
 </p>
 
 <h4>What We Get</h4>
